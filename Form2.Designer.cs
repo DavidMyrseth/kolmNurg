@@ -1,6 +1,6 @@
-﻿namespace Form1
+﻿namespace triangle
 {
-    partial class Form1
+    partial class Form2
     {
         /// <summary>
         /// Required designer variable.
@@ -28,18 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.SuspendLayout();
-            // 
-            // KolmNurgForm
-            // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.components = new System.ComponentModel.Container();
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Name = "KolmNurgForm";
-            this.Text = "Form1";
-            this.Load += new System.EventHandler(this.KolmNurgForm_Load);
-            this.ResumeLayout(false);
-
+            this.Text = "Form2";
         }
 
         #endregion

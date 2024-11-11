@@ -2,175 +2,92 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace kolmNurg
+namespace triangle
 {
-    public partial class KolmNurgForm : Form
+    public partial class Form1 : Form
     {
-        Button btn; // Вычисления
-        PictureBox pb; // Картинка треуг
-        ListView listView1; // Список для отображения результатов
-        TextBox txtA, txtB, txtC; // Стороны треугольника
+        private double a, b, c;
+        private Panel drawPanel;
 
-        public KolmNurgForm()
+        public Form1(int w, int h, double sideA, double sideB, double sideC)
         {
-            this.Size = new Size(800, 600);
-            this.Text = "Kolmnurga töö";
+            this.Width = w;
+            this.Height = h;
+            a = sideA;
+            b = sideB;
+            c = sideC;
 
-            // Инициализация и настройка кнопки
-            btn = new Button();
-            btn.Text = "Вычислить";
-            btn.BackColor = Color.FromArgb(255, 255, 192);
-            btn.Font = new Font("Arial", 20);
-            btn.Cursor = Cursors.Hand; // Курсор при наведении
-            btn.FlatAppearance.BorderColor = Color.FromArgb(0, 192, 192); // Цвет границы
-            btn.FlatAppearance.BorderSize = 10;
-            btn.FlatStyle = FlatStyle.Flat; // Стиль кнопки
-            btn.Size = new Size(250, 100);
-            btn.Location = new Point(500, 20);
-            btn.Click += Run_button_Click; // Подписка на событие клика
-            Controls.Add(btn); // Добавление кнопки на форму
+            this.Text = "Рисование треугольника";
+            this.Size = new Size(400, 300);
+            this.StartPosition = FormStartPosition.CenterScreen;
 
-            // Инициализация и настройка PictureBox
-            pb = new PictureBox();
-            pb.Size = new Size(500, 300);
-            pb.Location = new Point(this.ClientSize.Width - 410, this.ClientSize.Height - 320); // Положение PictureBox в правом нижнем углу
-            pb.SizeMode = PictureBoxSizeMode.Zoom;
-            pb.Image = Image.FromFile("AngryCat.png"); // Изначальное изображение
-            Controls.Add(pb); // Добавление PictureBox на форму
-
-            // Создание текстовых полей с соответствующими метками
-            CreateLabelAndTextBox("Сторона A:", 20, 340);
-            CreateLabelAndTextBox("Сторона B:", 20, 380);
-            CreateLabelAndTextBox("Сторона C:", 20, 420);
-
-            // Инициализация и настройка ListView для отображения результатов
-            listView1 = new ListView();
-            listView1.Size = new Size(350, 160);
-            listView1.Location = new Point(20, 40);
-            listView1.View = View.Details; // Установка режима отображения в виде деталей
-            listView1.FullRowSelect = true; // Разрешить выбор полной строки
-            listView1.GridLines = true; // Показать линии сетки
-
-            // Определение колонок для ListView
-            listView1.Columns.Add("Свойство", 150, HorizontalAlignment.Left); // Первая колонка
-            listView1.Columns.Add("Значение", 150, HorizontalAlignment.Left); // Вторая колонка
-
-            Controls.Add(listView1); // Добавление ListView на форму
-        }
-
-        // Метод для создания метки и текстового поля
-        private void CreateLabelAndTextBox(string labelText, int x, int y)
-        {
-            // Создание метки
-            Label label = new Label();
-            label.Text = labelText; // Установка текста метки
-            label.Location = new Point(x, y); // Положение метки
-            label.Size = new Size(100, 30); // Размер метки
-            Controls.Add(label); // Добавление метки на форму
-
-            // Создание текстового поля
-            TextBox textBox = new TextBox();
-            textBox.Location = new Point(x + 110, y);
-            textBox.Size = new Size(150, 70);
-
-            // Установка текста подсказки
-            textBox.Text = "Введите: ";
-            textBox.ForeColor = Color.Gray;
-
-            // Обработчик события для потери фокуса
-            textBox.Enter += (sender, e) =>
+            drawPanel = new Panel
             {
-                if (textBox.Text == "Введите: ") // Если текст равен подсказке
-                {
-                    textBox.Text = string.Empty; // Очистить текст
-                    textBox.ForeColor = Color.Black; // Изменить цвет текста на черный
-                }
+                Size = new Size(200, 150),
+                Location = new Point(50, 50),
+                BackColor = Color.White
             };
+            this.Controls.Add(drawPanel);
 
-            // Обработчик события для получения фокуса
-            textBox.Leave += (sender, e) =>
-            {
-                if (string.IsNullOrWhiteSpace(textBox.Text)) // Если текст пустой
-                {
-                    textBox.Text = "Введите значение: "; // Восстановить текст подсказки
-                    textBox.ForeColor = Color.Gray; // Изменить цвет текста на серый
-                }
-            };
-
-            Controls.Add(textBox); // Добавление текстового поля на форму
-
-            // Сохранение ссылки на текстовое поле для дальнейшего использования
-            if (labelText == "Сторона A:")
-                txtA = textBox;
-            else if (labelText == "Сторона B:")
-                txtB = textBox;
-            else if (labelText == "Сторона C:")
-                txtC = textBox;
+            // Подписываемся на событие перерисовки панели
+            drawPanel.Paint += DrawPanel_Paint;
         }
 
-        private void Run_button_Click(object sender, EventArgs e)
+        private void DrawPanel_Paint(object sender, PaintEventArgs e)
         {
-            double a, b, c;
+            Graphics g = e.Graphics;
 
-            if (double.TryParse(txtA.Text, out a) &&
-                double.TryParse(txtB.Text, out b) &&
-                double.TryParse(txtC.Text, out c))
+            if (a + b <= c || a + c <= b || b + c <= a)
             {
-                Triangle triangle = new Triangle(a, b, c); // Создание экземпляра треугольника
-
-                // Очистка предыдущих элементов в ListView
-                listView1.Items.Clear();
-
-                // Добавление свойств в ListView
-                listView1.Items.Add(new ListViewItem(new[] { "Сторона a", triangle.outputA() }));
-                listView1.Items.Add(new ListViewItem(new[] { "Сторона b", triangle.outputB() }));
-                listView1.Items.Add(new ListViewItem(new[] { "Сторона c", triangle.outputC() }));
-                listView1.Items.Add(new ListViewItem(new[] { "Периметр", triangle.Perimeter().ToString() }));
-                listView1.Items.Add(new ListViewItem(new[] { "Площадь", triangle.Surface().ToString() }));
-                listView1.Items.Add(new ListViewItem(new[] { "Существует?", triangle.ExistTriangle ? "Существует" : "Не существует" }));
-                listView1.Items.Add(new ListViewItem(new[] { "Тип треугольника", triangle.TriangleType }));
-
-                // Проверка существования треугольника перед отображением изображения
-                if (triangle.ExistTriangle)
-                {
-                    // Загрузка соответствующего изображения в зависимости от типа треугольника
-                    switch (triangle.TriangleType)
-                    {
-                        case "Равносторонний":
-                            pb.Image = Image.FromFile("Equilateral.png");
-                            break;
-                        case "Равнобедренный":
-                            pb.Image = Image.FromFile("Isosceles.png");
-                            break;
-                        case "Разносторонний":
-                            pb.Image = Image.FromFile("Scalene.png");
-                            break;
-                        default:
-                            pb.Image = null; // Очистить изображение, если тип не распознан
-                            break;
-                    }
-                }
-                else
-                {
-                    // Если треугольник не существует, очистить изображение
-                    pb.Image = null;
-                }
+                MessageBox.Show("Треугольник с такими сторонами не существует");
+                return;
             }
-            else
-            {
-                // Показ сообщения об ошибке, если ввод некорректный
-                MessageBox.Show("Введите корректные значения для сторон треугольника.", "Ошибка ввода", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
 
-        private void KolmNurgForm_Load(object sender, EventArgs e)
-        {
-            // Дополнительная логика загрузки может быть добавлена здесь
-        }
+            // Масштабирование, чтобы треугольник вписывался в панель
+            double maxSide = Math.Max(a, Math.Max(b, c));  // Находим самую длинную сторону
+            double scale = Math.Min(drawPanel.Width, drawPanel.Height) / maxSide * 0.8; // 80% от меньшего размера панели
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            // Логика для другой кнопки, если необходимо
+            // Масштабируем стороны
+            a *= scale;
+            b *= scale;
+            c *= scale;
+
+            // Начальная точка для стороны a
+            PointF pointA = new PointF(10, drawPanel.Height - 30);
+            PointF pointB = new PointF(pointA.X + (float)a, pointA.Y);
+
+            // Вычисляем угол для третьей вершины
+            double angleC = Math.Acos((a * a + b * b - c * c) / (2 * a * b));
+            float xC = (float)(pointA.X + b * Math.Cos(angleC));
+            float yC = (float)(pointA.Y - b * Math.Sin(angleC));
+
+            PointF pointC = new PointF(xC, yC);
+
+            float centerX = drawPanel.Width / 2;
+            float centerY = drawPanel.Height / 2;
+
+            float offsetX = centerX - (pointA.X + pointB.X + pointC.X) / 3;
+            float offsetY = centerY - (pointA.Y + pointB.Y + pointC.Y) / 3;
+
+            offsetY += 10;
+
+            pointA.X += offsetX;
+            pointA.Y += offsetY;
+            pointB.X += offsetX;
+            pointB.Y += offsetY;
+            pointC.X += offsetX;
+            pointC.Y += offsetY;
+
+            // Рисуем треугольник
+            Pen pen = new Pen(Color.Blue, 2);
+            g.DrawLine(pen, pointA, pointB);
+            g.DrawLine(pen, pointB, pointC);
+            g.DrawLine(pen, pointC, pointA);
+
+            // Метки для сторон
+            g.DrawString("A", new Font("Arial", 12), Brushes.Black, pointA.X - 20, pointA.Y);
+            g.DrawString("B", new Font("Arial", 12), Brushes.Black, pointB.X + 10, pointB.Y);
+            g.DrawString("C", new Font("Arial", 12), Brushes.Black, pointC.X, pointC.Y - 20);
         }
     }
 }
